@@ -1,4 +1,7 @@
 import express, { json } from 'express';
+import { eq } from 'drizzle-orm';
+import { db } from './db.js';
+import { demoUsers } from './schema.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
