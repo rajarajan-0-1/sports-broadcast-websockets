@@ -1,6 +1,5 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import { wsArcjet } from '../arcjet.js';
-import { de } from 'zod/locales';
 
 function sendJSON(socket, payload) {
     if(socket.readyState !== WebSocket.OPEN) return;
@@ -29,12 +28,14 @@ export function attachWebSocketServer(server) {
             try {
                 const decision = await wsArcjet.protect(req);
                 if(decision.isDenied()) {
+                    socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n');
                     const code = decision.reason.isRateLimit() ? 1013 : 1008; // 1013 for rate limit, 1008 for other denials    
                     const reason = decision.reason.isRateLimit() ? 'Too many connections!' : 'Forbidden!';
                     socket.close(code, reason);
                     return;
                 }
             } catch (error) {
+                socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
                 console.error('Error in WebSocket security check:', error);
                 socket.close(1011, 'Internal Server Error');
                 return;
